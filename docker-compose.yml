@@ -1,0 +1,141 @@
+# AgentPay — stack produksi lokal (Postgres, Redis, backend FastAPI, frontend nginx).
+# Dokumentasi: README.md, docker/README.md
+# Spesifikasi Compose: https://github.com/compose-spec/compose-spec/blob/master/spec.md
+
+name: agentpay
+
+networks:
+  agentpay_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+
+services:
+  # PostgreSQL 16 — hostname internal: postgres
+  postgres:
+    image: postgres:16-alpine
+    container_name: agentpay_postgres
+    environment:
+      POSTGRES_USER: agentpay
+      POSTGRES_PASSWORD: agentpay_secret
+      POSTGRES_DB: agentpay
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agentpay -d agentpay"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - agentpay_network
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+
+  redis:
+    image: redis:7-alpine
+    container_name: agentpay_redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - agentpay_network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: agentpay_backend
+    env_file:
+      - ./backend/.env.example
+    environment:
+      LOGGING_CONF_PATH: /app/docker/logging.conf
+      DATABASE_URL: postgresql+asyncpg://agentpay:agentpay_secret@postgres:5432/agentpay
+      TEST_DATABASE_URL: postgresql+asyncpg://agentpay:agentpay_secret@postgres:5432/agentpay_test
+      REDIS_URL: redis://redis:6379/0
+      POSTGRES_HOST: postgres
+      DISPUTE_LOG_PATH: /tmp/dispute_review.log
+      CORS_ORIGINS: '["http://localhost:3000","http://localhost:8000","http://localhost:5173"]'
+      SEED_DEMO: "1"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - agentpay_network
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ""
+    container_name: agentpay_frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "3000:80"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - agentpay_network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.25"
+          memory: 128M

@@ -1,0 +1,6 @@
+# Override ringan untuk pengujian e2e: timeout transaksi sangat pendek, tanpa seed DB.
+services:
+  backend:
+    environment:
+      TRANSACTION_TIMEOUT_HOURS: "0.00003"
+      SEED_DEMO: "0"

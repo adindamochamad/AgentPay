@@ -1,0 +1,27 @@
+# Override pengembangan: hot reload backend saja (gabung dengan docker-compose.yml).
+# Frontend dev: di terminal terpisah jalankan `cd frontend && npm install && npm run dev`
+# (Vite mem-proxy ke http://localhost:8000).
+#
+# Contoh: docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+
+services:
+  backend:
+    volumes:
+      - ./backend/app:/app/app
+    environment:
+      DEBUG: "true"
+      ENVIRONMENT: development
+    entrypoint:
+      - sh
+      - -c
+      - |
+        set -e
+        host_pg=$${POSTGRES_HOST:-postgres}
+        indeks=0
+        while ! pg_isready -h "$$host_pg" -U agentpay -d agentpay -q 2>/dev/null; do
+          indeks=$$((indeks+1))
+          if [ "$$indeks" -ge 30 ]; then echo "Postgres tidak siap"; exit 1; fi
+          sleep 1
+        done
+        alembic upgrade head
+        exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload

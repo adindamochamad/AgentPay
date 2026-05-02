@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+  body {
+    @apply bg-slate-950 text-slate-100 antialiased;
+  }
+}
+
+@layer components {
+  .status-badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide;
+  }
+
+  .status-initiated {
+    @apply bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/40;
+  }
+  .status-pending {
+    @apply bg-sky-500/20 text-sky-300 ring-1 ring-sky-500/40;
+  }
+  .status-confirmed {
+    @apply bg-violet-500/20 text-violet-300 ring-1 ring-violet-500/40;
+  }
+  .status-settled {
+    @apply bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/40;
+  }
+  .status-failed,
+  .status-expired {
+    @apply bg-rose-500/20 text-rose-300 ring-1 ring-rose-500/40;
+  }
+  .status-rolled_back {
+    @apply bg-orange-500/20 text-orange-300 ring-1 ring-orange-500/40;
+  }
+  .status-unknown {
+    @apply bg-slate-500/20 text-slate-300 ring-1 ring-slate-500/40;
+  }
+
+  .card {
+    @apply rounded-xl border border-slate-800/80 bg-slate-900/60 p-5 shadow-lg shadow-slate-950/40 backdrop-blur-sm transition-shadow duration-200;
+  }
+  .card-hover {
+    @apply hover:border-agentpay-600/50 hover:shadow-xl hover:shadow-agentpay-950/30;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-agentpay-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-agentpay-600 text-white hover:bg-agentpay-500 active:bg-agentpay-700;
+  }
+  .btn-secondary {
+    @apply btn border border-slate-600 bg-slate-800 text-slate-100 hover:bg-slate-700;
+  }
+  .btn-success {
+    @apply btn bg-emerald-600 text-white hover:bg-emerald-500;
+  }
+  .btn-danger {
+    @apply btn bg-rose-600 text-white hover:bg-rose-500;
+  }
+}
+
+@layer utilities {
+  .scrollbar-slim {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(51 65 85) rgb(15 23 42);
+  }
+  .scrollbar-slim::-webkit-scrollbar {
+    @apply h-2 w-2;
+  }
+  .scrollbar-slim::-webkit-scrollbar-track {
+    @apply rounded-full bg-slate-900;
+  }
+  .scrollbar-slim::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-slate-600 hover:bg-slate-500;
+  }
+}
