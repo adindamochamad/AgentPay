@@ -363,7 +363,7 @@ See [`DEPLOYMENT.md`](./DEPLOYMENT.md) for production configuration. Key checkli
 - Set `SECRET_KEY` via `openssl rand -hex 32`
 - Set `DATABASE_URL`, `REDIS_URL`, `CORS_ORIGINS` in your secrets manager
 - Set `ENVIRONMENT=production`, `DEBUG=false`
-- Use the template in [`.env.production`](./.env.production) — **never commit real secrets**
+- Copy [`backend/.env.example`](./backend/.env.example) to a local env file. Do not commit `.env`, `.env.production`, or any file that holds a real secret.
 
 ---
 
